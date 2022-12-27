@@ -4,7 +4,7 @@ const Animal = require("../models/Animal");
 const router = Router();
 
 router.get("/", async (req, res) => {
-  console.log("Welcome!!!");
+  console.log("Welcome to the app!!!");
   const animales = await Animal.find();
   return res.send(animales);
 });

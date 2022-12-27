@@ -112,3 +112,100 @@ Una vez configurado nuestro archivo de extensión yml y realizados los cambios p
 Ya podremos verificar el funcionamiento de nuestros servicios visitando las rutas http://localhost:3000 y http://localhost:3000/crear
 
 Podremos detener y eliminar los contenedores indicando en nuestra terminal `docker compose down`. Sin embargo, como se indicó anteriormente, al volver a iniciar nuestros servicios, los datos creados permanecen al haber especificado la propiedad `volumes`. Ahora bien, si deseamos eliminar también los datos de nuestra aplicación, emplearemos el comando `docker compose down --volumes`
+
+Sin embargo, nuestro ambiente de desarrollo será diferente a nuestro ambiente de producción. A continuación, veremos como configurar un ambiente de desarrollo. Para ello, crearemos un nuevo archivo llamado Dockerfile.dev:
+
+```
+#Indicamos la imagen base, en este caso empleamos node v.18
+FROM node:18
+
+#Instalamos nodemon
+RUN npm install -g nodemon
+
+#Creamos la carpeta principal que contendrá el código fuente
+RUN mkdir -p /usr/src/app
+
+#Nos ubicamos en la carpeta app
+WORKDIR /usr/src/app
+
+#Copiamos package.json en el directorio actual de la imagen
+COPY package*.json ./
+
+#Instalamos todos los módulos y dependencias
+RUN  npm install
+
+#Copiamos todo en el directorio actual de la imagen
+COPY . .
+
+#Inico de la app
+CMD ["npm", "run", "dev"]
+```
+
+Como podemos observar, la configuración de este archivo es muy similar al anterior, con la diferencia de que instalaremos nodemon, herramienta que detectará los cambios de nuestra aplicación durante el desarrollo de la misma. Además, hemos sustituido el comando `npm run start` por `npm run dev`, es por ello, que en nuestro package.json añadiremos el nuevo script:
+
+```
+# package.json
+
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon -L src/index.js"
+  },
+```
+
+Tras configurar el nuevo Dockerfile, añadiremos un fichero docker-compose-dev.yml. De nuevo, la configuración de este, será muy similar al creado anteriormente. En este caso los cambios a implementar son los siguientes:
+
+- Dentro de la características `build` del servicio app, añadiremos dos nuevos atributos, `context`, el cual indica en que carpeta se encuentra el archivo Dockerfile para generar la imagen, y el atributo `Dockerfile`, el cual indica que tomaremos el nuevo archivo generado Dockerfile.dev.
+- Además, añadiremos un `volume` al servicio app, vinculamos la ruta local con la ruta del contenedor para reflejar los cambios durante el desarrollo.
+- De manera totalmente opcional, podremos ocultar los logs de la base de datos con `command: mongod --quiet --logpath /dev/null`.
+
+```
+#Versión de Docker Compose
+version: "3.9"
+#Definimos los servicios: app y mongodb
+services:
+  #Indicamos la ruta en la cual se encuentra nuestro archivo Dockerfile
+  app:
+    restart: always
+    # Indicamos que el servicio se genera a partir del Dockerfile que se encuentra en esta misma ruta
+    build:
+      #Ruta actual de Docker-compose-dev
+      context: .
+      dockerfile: Dockerfile.dev
+    #Asignamos puertos para el servicio
+    ports:
+      - "3000:3000"
+    links:
+      - mongodb
+    volumes:
+      # Vinculamos la ruta local con la ruta del contenedor para reflejar los cambios realizados durante el desarrollo de la aplicación
+      - .:/usr/src/app
+    env_file:
+      - .env
+  mongodb:
+    #Definimos la imagen a partir de la cual se genera el servicio mongodb
+    image: mongo
+    #Asignamos puertos para el servicio
+    ports:
+      - "27017:27017"
+    #Definimos las variables de entorno
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=user
+      - MONGO_INITDB_ROOT_PASSWORD=password
+
+    #Asignamos el volume donde se guardarán los datos y pasamos la ruta donde mongo guarda los datos.
+    #Rutas para otros tipo de bases de datos:
+    # mysql -> /var/lib/mysql
+    # postgres -> /var/lib/postgresql/data
+    volumes:
+      - mongo-data:/data/db
+
+#Indicamos el volume disponible para el contenedor
+volumes:
+  mongo-data:
+```
+
+Para ejecutar nuestra aplicación usaremos el comando `docker compose -f docker-compose-dev.yml up`, a partir de la bandera `-f` podemos indicar un archivo específico de docker compose. Ahora, pdremos observar que al realizar cualquier cambio en nuestra aplicación esta se actualizará inmediatamente gracias al "hot reload" de nodemon.
+
+Por último, podemos destacar algunos comandos útiles como `docker compose up -d`, el cual montará la aplicación en segundo plano, o también, `docker compose ps` que permite visualizar los servicios en ejecución.
+
+De esta manera, podemos tener varios ambientes empleando Docker Compose, uno de producción y otro de desarrollo.
