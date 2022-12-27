@@ -154,7 +154,7 @@ Como podemos observar, la configuración de este archivo es muy similar al anter
 
 Tras configurar el nuevo Dockerfile, añadiremos un fichero docker-compose-dev.yml. De nuevo, la configuración de este, será muy similar al creado anteriormente. En este caso los cambios a implementar son los siguientes:
 
-- Dentro de la características `build` del servicio app, añadiremos dos nuevos atributos, `context`, el cual indica en que carpeta se encuentra el archivo Dockerfile para generar la imagen, y el atributo `Dockerfile`, el cual indica que tomaremos el nuevo archivo generado Dockerfile.dev.
+- Dentro de la características `build` del servicio app, añadiremos dos nuevos atributos, `context`, el cual indica en que carpeta se encuentra el archivo Dockerfile para generar la imagen, y el atributo `Dockerfile`, el cual especifica que tomaremos el nuevo archivo generado Dockerfile.dev.
 - Además, añadiremos un `volume` al servicio app, vinculamos la ruta local con la ruta del contenedor para reflejar los cambios durante el desarrollo.
 - De manera totalmente opcional, podremos ocultar los logs de la base de datos con `command: mongod --quiet --logpath /dev/null`.
 
@@ -204,8 +204,8 @@ volumes:
   mongo-data:
 ```
 
-Para ejecutar nuestra aplicación usaremos el comando `docker compose -f docker-compose-dev.yml up`, a partir de la bandera `-f` podemos indicar un archivo específico de docker compose. Ahora, pdremos observar que al realizar cualquier cambio en nuestra aplicación esta se actualizará inmediatamente gracias al "hot reload" de nodemon.
+Para ejecutar nuestra aplicación usaremos el comando `docker compose -f docker-compose-dev.yml up`, a partir de la bandera `-f` podemos indicar un archivo específico de docker compose. Ahora, observaremos que al realizar cualquier cambio en nuestra aplicación, esta se actualizará inmediatamente gracias al "hot reload" de nodemon.
 
-Por último, podemos destacar algunos comandos útiles como `docker compose up -d`, el cual montará la aplicación en segundo plano, o también, `docker compose ps` que permite visualizar los servicios en ejecución.
+Por último, destacaremos algunos comandos útiles como `docker compose up -d`, el cual montará la aplicación en segundo plano, o también, `docker compose ps` que permite visualizar los servicios en ejecución.
 
-De esta manera, podemos tener varios ambientes empleando Docker Compose, uno de producción y otro de desarrollo.
+De esta manera, podremos tener varios ambientes empleando Docker Compose, uno de producción y otro de desarrollo. Así, podremos crear cualquier tipo de aplicación sin necesidad de instalar todo tipo de librerias en nuestro ordenador y siendo a su vez, totalmente portable y con un solo comando.
