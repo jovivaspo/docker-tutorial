@@ -93,3 +93,19 @@ docker run  --name nodeapp-container --env-file .env -p8000:8000  nodeapp:1
 ```
 
 Como veremos, nuestra aplicación comenzará a correr en el puerto indicado, sin embargo, pronto fallará ya que no hemos establecido la conexión con nuestra base de datos, pero esto será explicado en el siguiente tutorial correspondiente a Docker Compose.
+
+## Dockerfile para distintos ambientes
+
+Como es habitual, solo tener varios ambientes: desarrollo, test, producción, etc. Es posible configurar varios Dockerfile en función del ambiente en el cual nos encontremos. Por ejemplo, podemos contar un un archivo Dockerfile.dev para desarrollo y otro Dockerfile.prod para producción. En este caso, a la hora de generar las imágenes, podemos emplear la bandera `-f` para especificar el archivo Dockerfile que queremos emplear:
+
+Ejemplo para desarrollo:
+
+```
+docker build -t ejemplo:dev -f Dockerfile.dev .
+```
+
+Ejemplo para producción:
+
+```
+docker build -t ejemplo:prod -f Dockerfile.prod .
+```
